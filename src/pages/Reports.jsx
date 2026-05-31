@@ -8,7 +8,7 @@ import {
 
 function Reports() {
   const [todayReport, setTodayReport] =
-    useState(null);
+    useState({});
 
   const [historical, setHistorical] =
     useState([]);
@@ -16,7 +16,9 @@ function Reports() {
   const [range, setRange] =
     useState("day");
 
-  // Today's report
+  // =====================
+  // TODAY REPORT
+  // =====================
   useEffect(() => {
     const fetchToday =
       async () => {
@@ -40,7 +42,9 @@ function Reports() {
     fetchToday();
   }, []);
 
-  // Historical report
+  // =====================
+  // HISTORICAL REPORT
+  // =====================
   useEffect(() => {
     const fetchHistorical =
       async () => {
@@ -55,13 +59,15 @@ function Reports() {
             data
           );
 
-          // FIX
-          setHistorical(
+          const history =
             Array.isArray(
               data?.history
             )
               ? data.history
-              : []
+              : [];
+
+          setHistorical(
+            history
           );
         } catch (error) {
           console.log(error);
@@ -72,41 +78,52 @@ function Reports() {
     fetchHistorical();
   }, [range]);
 
-  // Safe totals
+  // =====================
+  // SAFE TOTALS
+  // =====================
   const totalSales =
-    (historical || []).reduce(
+    historical.reduce(
       (sum, item) =>
         sum +
         Number(
-          item?.sales || 0
+          item.total ??
+            item.sales ??
+            item.amount ??
+            item.grandTotal ??
+            0
         ),
       0
     );
 
   const totalProfit =
-    (historical || []).reduce(
+    historical.reduce(
       (sum, item) =>
         sum +
         Number(
-          item?.profit || 0
+          item.profit ??
+            item.netProfit ??
+            0
         ),
       0
     );
 
   const totalOperations =
-    (historical || []).reduce(
+    historical.reduce(
       (sum, item) =>
         sum +
         Number(
-          item?.salesCount ||
-            0
+          item.salesCount ??
+            item.count ??
+            item.operations ??
+            item.orders ??
+            1
         ),
       0
     );
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* HEADER */}
       <div>
         <h1 className="text-2xl font-bold text-white">
           التقارير والإحصائيات
@@ -119,7 +136,7 @@ function Reports() {
         </p>
       </div>
 
-      {/* Today's Sales */}
+      {/* TODAY */}
       <div className="bg-[#111827] border border-white/10 rounded-2xl p-5 space-y-4">
         <div className="flex justify-between items-center">
           <span className="text-gray-400 text-sm">
@@ -133,14 +150,13 @@ function Reports() {
           </h2>
         </div>
 
-        {/* Boxes */}
+        {/* BOXES */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Box
             title="كاش"
             value={
               todayReport
-                ?.totals?.cash ||
-              0
+                ?.totals?.cash
             }
           />
 
@@ -148,8 +164,7 @@ function Reports() {
             title="فيزا"
             value={
               todayReport
-                ?.totals?.card ||
-              0
+                ?.totals?.card
             }
           />
 
@@ -157,8 +172,7 @@ function Reports() {
             title="محفظة"
             value={
               todayReport
-                ?.totals
-                ?.wallet || 0
+                ?.totals?.wallet
             }
           />
 
@@ -167,13 +181,12 @@ function Reports() {
             value={
               todayReport
                 ?.totals
-                ?.insurance ||
-              0
+                ?.insurance
             }
           />
         </div>
 
-        {/* Total */}
+        {/* TOTAL */}
         <div className="flex justify-between items-center border-t border-white/10 pt-4">
           <button className="bg-gray-600 text-white px-4 py-2 rounded-lg opacity-60">
             تقفيل اليومية
@@ -197,59 +210,36 @@ function Reports() {
         </div>
       </div>
 
-      {/* Previous Reports */}
+      {/* HISTORICAL */}
       <div className="bg-[#111827] border border-white/10 rounded-2xl p-5 space-y-5">
 
-        {/* Top */}
+        {/* TOP */}
         <div className="flex justify-between items-center">
           <div className="flex gap-2">
-            <button
-              onClick={() =>
-                setRange(
-                  "day"
-                )
-              }
-              className={`px-3 py-1 rounded-lg text-sm ${
-                range ===
-                "day"
-                  ? "bg-white text-black"
-                  : "bg-white/10 text-gray-300"
-              }`}
-            >
-              يومي
-            </button>
-
-            <button
-              onClick={() =>
-                setRange(
-                  "week"
-                )
-              }
-              className={`px-3 py-1 rounded-lg text-sm ${
-                range ===
-                "week"
-                  ? "bg-white text-black"
-                  : "bg-white/10 text-gray-300"
-              }`}
-            >
-              أسبوعي
-            </button>
-
-            <button
-              onClick={() =>
-                setRange(
-                  "month"
-                )
-              }
-              className={`px-3 py-1 rounded-lg text-sm ${
-                range ===
-                "month"
-                  ? "bg-white text-black"
-                  : "bg-white/10 text-gray-300"
-              }`}
-            >
-              شهري
-            </button>
+            {[
+              "day",
+              "week",
+              "month",
+            ].map((r) => (
+              <button
+                key={r}
+                onClick={() =>
+                  setRange(r)
+                }
+                className={`px-3 py-1 rounded-lg text-sm ${
+                  range === r
+                    ? "bg-white text-black"
+                    : "bg-white/10 text-gray-300"
+                }`}
+              >
+                {r === "day"
+                  ? "يومي"
+                  : r ===
+                    "week"
+                  ? "أسبوعي"
+                  : "شهري"}
+              </button>
+            ))}
           </div>
 
           <h2 className="text-white font-bold">
@@ -257,7 +247,7 @@ function Reports() {
           </h2>
         </div>
 
-        {/* Export */}
+        {/* EXPORT */}
         <div className="flex gap-2">
           <button className="flex items-center gap-2 bg-white/10 px-3 py-1 rounded-lg text-sm">
             PDF{" "}
@@ -274,20 +264,20 @@ function Reports() {
           </button>
         </div>
 
-        {/* Stats */}
+        {/* STATS */}
         <div className="grid md:grid-cols-3 gap-4">
           <SmallBox
             title="إجمالي المبيعات"
-            value={totalSales.toFixed(
+            value={`${totalSales.toFixed(
               2
-            )}
+            )} ج.م`}
           />
 
           <SmallBox
             title="الأرباح"
-            value={totalProfit.toFixed(
+            value={`${totalProfit.toFixed(
               2
-            )}
+            )} ج.م`}
           />
 
           <SmallBox
@@ -298,15 +288,7 @@ function Reports() {
           />
         </div>
 
-        {/* Chart */}
-        <div className="h-40 border border-dashed border-white/10 rounded-xl flex items-center justify-center text-gray-500">
-          {historical.length >
-          0
-            ? "تم تحميل البيانات"
-            : "لا يوجد بيانات"}
-        </div>
-
-        {/* Table */}
+        {/* TABLE */}
         <div className="bg-[#0b1220] border border-white/10 rounded-xl overflow-hidden">
           <table className="w-full text-sm text-right">
             <thead className="text-gray-400 border-b border-white/10">
@@ -336,44 +318,62 @@ function Reports() {
                   (
                     item,
                     index
-                  ) => (
-                    <tr
-                      key={
-                        index
-                      }
-                      className="border-b border-white/5"
-                    >
-                      <td className="p-3">
-                        {item?.date ||
-                          "—"}
-                      </td>
+                  ) => {
+                    const sales =
+                      Number(
+                        item.total ??
+                          item.sales ??
+                          item.amount ??
+                          item.grandTotal ??
+                          0
+                      );
 
-                      <td className="p-3">
-                        ج.م{" "}
-                        {Number(
-                          item?.sales ||
-                            0
-                        ).toFixed(
-                          2
-                        )}
-                      </td>
+                    const profit =
+                      Number(
+                        item.profit ??
+                          0
+                      );
 
-                      <td className="p-3">
-                        ج.م{" "}
-                        {Number(
-                          item?.profit ||
-                            0
-                        ).toFixed(
-                          2
-                        )}
-                      </td>
+                    const count =
+                      Number(
+                        item.salesCount ??
+                          item.count ??
+                          1
+                      );
 
-                      <td className="p-3">
-                        {item?.salesCount ||
-                          0}
-                      </td>
-                    </tr>
-                  )
+                    return (
+                      <tr
+                        key={
+                          index
+                        }
+                        className="border-b border-white/10"
+                      >
+                        <td className="p-3">
+                          {item.date ||
+                            item.day ||
+                            "—"}
+                        </td>
+
+                        <td className="p-3">
+                          ج.م{" "}
+                          {sales.toFixed(
+                            2
+                          )}
+                        </td>
+
+                        <td className="p-3">
+                          ج.م{" "}
+                          {profit.toFixed(
+                            2
+                          )}
+                        </td>
+
+                        <td className="p-3">
+                          {count}
+                        </td>
+                      </tr>
+                    );
+                  }
                 )
               ) : (
                 <tr>

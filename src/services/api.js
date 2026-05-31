@@ -394,3 +394,159 @@ export const getHistoricalReport =
 
     return response.json();
   };
+  // ==========================================================================================
+export const getAuditLogs =
+  async () => {
+    try {
+      const token =
+        localStorage.getItem(
+          "token"
+        );
+
+      // لو مفيش توكين
+      if (!token) {
+        localStorage.clear();
+
+        window.location.href =
+          "/login";
+
+        return {
+          data: [],
+        };
+      }
+
+      const response =
+        await fetch(
+          `${BASE_URL}/logs`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type":
+                "application/json",
+            },
+          }
+        );
+
+      // token invalid
+      if (
+        response.status ===
+          401 ||
+        response.status ===
+          403
+      ) {
+        console.log(
+          "TOKEN INVALID"
+        );
+
+        localStorage.clear();
+
+        window.location.href =
+          "/login";
+
+        return {
+          data: [],
+        };
+      }
+
+      const data =
+        await response.json();
+
+      console.log(
+        "AUDIT LOGS:",
+        data
+      );
+
+      return data;
+    } catch (error) {
+      console.error(
+        "GET AUDIT LOGS ERROR:",
+        error
+      );
+
+      localStorage.clear();
+
+      return {
+        data: [],
+      };
+    }
+  };
+
+  // ==========================================================
+  // ==========================
+// CHECK IN
+// ==========================
+export const checkIn = async (
+  username
+) => {
+  try {
+    const token =
+      localStorage.getItem(
+        "token"
+      );
+
+    const response =
+      await fetch(
+        "https://backendfinal-1-production.up.railway.app/api/attendance/check-in",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type":
+              "application/json",
+          },
+
+          body: JSON.stringify({
+            username,
+          }),
+        }
+      );
+
+    const data =
+      await response.json();
+
+    return data;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+// ==========================
+// CHECK OUT
+// ==========================
+export const checkOut =
+  async (username) => {
+    try {
+      const token =
+        localStorage.getItem(
+          "token"
+        );
+
+      const response =
+        await fetch(
+          "https://backendfinal-1-production.up.railway.app/api/attendance/check-out",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type":
+                "application/json",
+            },
+
+            body:
+              JSON.stringify({
+                username,
+              }),
+          }
+        );
+
+      const data =
+        await response.json();
+
+      return data;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  };

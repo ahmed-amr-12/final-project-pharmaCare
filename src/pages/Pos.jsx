@@ -174,59 +174,95 @@ function Pos() {
           item.qty,
       0
     );
+// =====================
+// =====================
+// CHECKOUT
+// =====================
+const handleCheckout =
+  async () => {
+    if (
+      cart.length === 0
+    ) {
+      alert(
+        "السلة فارغة"
+      );
+      return;
+    }
 
-  // =====================
-  // CHECKOUT
-  // =====================
-  const handleCheckout =
-    async () => {
-      if (
-        cart.length === 0
-      ) {
-        alert(
-          "السلة فارغة"
-        );
-        return;
-      }
+    const saleData = {
+      paymentMethod:
+        paymentMethod,
 
-      try {
-        const saleData = {
-          paymentMethod:
-            paymentMethod,
+      items: cart.map(
+        (item) => ({
+          medicineId:
+            item.id,
 
-          items: cart.map(
-            (item) => ({
-              medicineId:
-                item.id,
+          qty:
+            item.qty,
 
-              qty:
-                item.qty,
+          quantityType:
+            "box",
+        })
+      ),
+    };
 
-              quantityType:
-                "box",
-            })
-          ),
-        };
-
-        console.log(
-          "SALE DATA:",
+    try {
+      // أول محاولة للبيع
+      const response =
+        await createSale(
           saleData
         );
 
-        const response =
-          await createSale(
-            saleData
+      console.log(
+        "SALE RESPONSE:",
+        response
+      );
+
+      // =====================
+      // لو فيه تعارض دوائي
+      // =====================
+      if (
+        response?.error?.includes(
+          "تعارض"
+        )
+      ) {
+        // دي بتطلع Yes / No
+        const shouldContinue =
+          window.confirm(
+            `${response.error}
+
+هل تريد إكمال عملية البيع؟`
           );
 
+        // NO
+        if (
+          !shouldContinue
+        ) {
+          alert(
+            "تم إلغاء العملية ❌"
+          );
+          return;
+        }
+
+        // YES
+        const forceSale =
+          await createSale({
+            ...saleData,
+            forceInteraction:
+              true,
+          });
+
         console.log(
-          response
+          "FORCE SALE:",
+          forceSale
         );
 
         if (
-          response.error
+          forceSale?.error
         ) {
           alert(
-            response.error
+            forceSale.error
           );
           return;
         }
@@ -235,18 +271,98 @@ function Pos() {
           "تمت عملية البيع بنجاح ✅"
         );
 
+        // تنظيف
         setCart([]);
         setSearch("");
         setBarcode("");
 
-      } catch (error) {
-        console.log(error);
-
-        alert(
-          "فشل عملية البيع ❌"
-        );
+        return;
       }
-    };
+
+      // Error عادي
+      if (
+        response?.error
+      ) {
+        alert(
+          response.error
+        );
+        return;
+      }
+
+      // نجاح طبيعي
+      alert(
+        "تمت عملية البيع بنجاح ✅"
+      );
+
+      setCart([]);
+      setSearch("");
+      setBarcode("");
+
+    } catch (error) {
+      console.log(error);
+
+      // لو backend رجع 409 تعارض
+      if (
+        error?.response
+          ?.status ===
+        409
+      ) {
+        const shouldContinue =
+          window.confirm(
+            "يوجد تعارض دوائي\n\nهل تريد إكمال عملية البيع؟"
+          );
+
+        // NO
+        if (
+          !shouldContinue
+        ) {
+          return;
+        }
+
+        // YES
+        try {
+          const forceSale =
+            await createSale({
+              ...saleData,
+              forceInteraction:
+                true,
+            });
+
+          console.log(
+            "FORCE SALE:",
+            forceSale
+          );
+
+          alert(
+            "تمت عملية البيع بنجاح ✅"
+          );
+
+          // تنظيف
+          setCart([]);
+          setSearch("");
+          setBarcode("");
+
+        } catch (
+          forceError
+        ) {
+          console.log(
+            forceError
+          );
+
+          alert(
+            "فشل عملية البيع ❌"
+          );
+        }
+
+        return;
+      }
+
+      alert(
+        "فشل عملية البيع ❌"
+      );
+    }
+  };
+
 
   return (
     <div className="grid lg:grid-cols-3 gap-6">
