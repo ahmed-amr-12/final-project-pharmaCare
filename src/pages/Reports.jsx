@@ -6,6 +6,11 @@ import {
   getHistoricalReport,
 } from "../services/api";
 
+
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+
+
 function Reports() {
   const [todayReport, setTodayReport] =
     useState({});
@@ -120,6 +125,87 @@ function Reports() {
         ),
       0
     );
+
+// =====================
+// EXPORT PDF
+// =====================
+const downloadPDF = () => {
+  const doc = new jsPDF();
+
+  doc.setFontSize(18);
+  doc.text("Pharmacy Reports", 14, 20);
+
+  doc.setFontSize(12);
+  doc.text(
+    `Range: ${range}`,
+    14,
+    30
+  );
+
+  doc.text(
+    `Total Sales: ${totalSales.toFixed(
+      2
+    )} EGP`,
+    14,
+    40
+  );
+
+  doc.text(
+    `Profit: ${totalProfit.toFixed(
+      2
+    )} EGP`,
+    14,
+    50
+  );
+
+  doc.text(
+    `Operations: ${totalOperations}`,
+    14,
+    60
+  );
+
+  autoTable(doc, {
+    startY: 70,
+    head: [
+      [
+        "Date",
+        "Sales",
+        "Profit",
+        "Operations",
+      ],
+    ],
+    body: historical.map(
+      (item) => [
+        item.date ||
+          item.day ||
+          "-",
+
+        Number(
+          item.total ??
+            item.sales ??
+            item.amount ??
+            item.grandTotal ??
+            0
+        ).toFixed(2),
+
+        Number(
+          item.profit ??
+            0
+        ).toFixed(2),
+
+        Number(
+          item.salesCount ??
+            item.count ??
+            1
+        ),
+      ]
+    ),
+  });
+
+  doc.save(
+    `report-${range}.pdf`
+  );
+};
 
   return (
     <div className="space-y-6">
@@ -247,23 +333,21 @@ function Reports() {
           </h2>
         </div>
 
-        {/* EXPORT */}
-        <div className="flex gap-2">
-          <button className="flex items-center gap-2 bg-white/10 px-3 py-1 rounded-lg text-sm">
-            PDF{" "}
-            <Download
-              size={14}
-            />
-          </button>
+  {/* EXPORT */}
+<div className="flex gap-2">
+  <button
+    onClick={downloadPDF}
+    className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-3 py-1 rounded-lg text-sm"
+  >
+    PDF
+    <Download size={14} />
+  </button>
 
-          <button className="flex items-center gap-2 bg-white/10 px-3 py-1 rounded-lg text-sm">
-            CSV{" "}
-            <Download
-              size={14}
-            />
-          </button>
-        </div>
-
+  <button className="flex items-center gap-2 bg-white/10 px-3 py-1 rounded-lg text-sm">
+    CSV
+    <Download size={14} />
+  </button>
+</div>
         {/* STATS */}
         <div className="grid md:grid-cols-3 gap-4">
           <SmallBox

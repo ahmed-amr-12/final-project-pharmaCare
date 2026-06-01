@@ -1,11 +1,34 @@
+import axios from "axios";
+
 const BASE_URL =
   "https://backendfinal-1-production.up.railway.app/api";
+
+const api = axios.create({
+  baseURL: BASE_URL,
+});
 
 // ==========================================
 // TOKEN
 // ==========================================
 const getToken = () =>
   localStorage.getItem("token");
+
+// Attach token automatically
+api.interceptors.request.use(
+  (config) => {
+    const token =
+      getToken();
+
+    if (token) {
+      config.headers.Authorization =
+        `Bearer ${token}`;
+    }
+
+    return config;
+  }
+);
+
+// export default api;
 
 // ==========================================
 // USERS
@@ -161,6 +184,46 @@ export const getMedicines =
     }
   };
 
+
+// Add Medicine
+export const addMedicine =
+  async (medicineData) => {
+    try {
+      const response =
+        await fetch(
+          `${BASE_URL}/medicines`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type":
+                "application/json",
+              Authorization: `Bearer ${getToken()}`,
+            },
+
+            body: JSON.stringify(
+              medicineData
+            ),
+          }
+        );
+
+      const data =
+        await response.json();
+
+      console.log(
+        "ADD MEDICINE:",
+        data
+      );
+
+      return data;
+    } catch (error) {
+      console.log(
+        "ADD MEDICINE ERROR:",
+        error
+      );
+    }
+  };
+
+
 // Search Medicine By Barcode
 export const searchMedicineByBarcode =
   async (barcode) => {
@@ -193,10 +256,12 @@ export const searchMedicineByBarcode =
     }
   };
 
-// ==========================================
+
+  // ==========================================
 // SUPPLIERS
 // ==========================================
 
+// Get Suppliers
 export const getSuppliers =
   async () => {
     try {
@@ -207,6 +272,8 @@ export const getSuppliers =
             method: "GET",
             headers: {
               Authorization: `Bearer ${getToken()}`,
+              "Content-Type":
+                "application/json",
             },
           }
         );
@@ -222,7 +289,7 @@ export const getSuppliers =
       return data || [];
     } catch (error) {
       console.log(
-        "SUPPLIERS ERROR:",
+        "GET SUPPLIERS ERROR:",
         error
       );
 
@@ -230,6 +297,77 @@ export const getSuppliers =
     }
   };
 
+// Add Supplier
+export const addSupplier =
+  async (
+    supplierData
+  ) => {
+    try {
+      const response =
+        await fetch(
+          `${BASE_URL}/suppliers`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type":
+                "application/json",
+              Authorization: `Bearer ${getToken()}`,
+            },
+
+            body: JSON.stringify(
+              supplierData
+            ),
+          }
+        );
+
+      const data =
+        await response.json();
+
+      console.log(
+        "ADD SUPPLIER:",
+        data
+      );
+
+      return data;
+    } catch (error) {
+      console.log(
+        "ADD SUPPLIER ERROR:",
+        error
+      );
+    }
+  };
+
+// Delete Supplier
+export const deleteSupplier =
+  async (id) => {
+    try {
+      const response =
+        await fetch(
+          `${BASE_URL}/suppliers/${id}`,
+          {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${getToken()}`,
+            },
+          }
+        );
+
+      const data =
+        await response.json();
+
+      console.log(
+        "DELETE SUPPLIER:",
+        data
+      );
+
+      return data;
+    } catch (error) {
+      console.log(
+        "DELETE SUPPLIER ERROR:",
+        error
+      );
+    }
+  };
 // ==========================================
 // NOTIFICATIONS
 // ==========================================
@@ -550,3 +688,7 @@ export const checkOut =
       throw error;
     }
   };
+
+
+  // =========================================================
+ 
